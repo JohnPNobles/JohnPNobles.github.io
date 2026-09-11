@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opportunity Finder Demo</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0f7ff', 500: '#0284c7', 600: '#0369a1', 900: '#0c4a6e' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+  <!-- Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-black tracking-tight text-slate-900">OPPORTUNITY<span class="text-sky-600">INDEX</span></h1>
+        <p class="text-xs text-slate-500 font-medium">Curated Recurring STEM Opportunities & Research</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+          ● Live MVP Demo
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <!-- Filter Sidebar -->
+      <aside class="lg:col-span-1 space-y-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm sticky top-24">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-slate-800 text-base">Filters</h2>
+            <button id="reset-filters" class="text-xs text-sky-600 hover:text-sky-700 font-semibold underline">Reset all</button>
+          </div>
+
+          <!-- Search Query -->
+          <div class="mb-5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Search Keyword</label>
+            <input type="text" id="search-input" placeholder="e.g., DOE, Math, Machine Learning..." 
+                   class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none">
+          </div>
+
+          <!-- Category Filter -->
+          <div class="mb-5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Opportunity Type</label>
+            <select id="category-filter" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              <option value="ALL">All Categories</option>
+              <option value="Academic Research (REU)">Academic Research (REU)</option>
+              <option value="National Lab Internship">National Lab Internship</option>
+              <option value="Fellowship / Scholarship">Fellowship / Scholarship</option>
+              <option value="Industry Internship">Industry Internship</option>
+            </select>
+          </div>
+
+          <!-- Citizenship Filter -->
+          <div class="mb-5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Citizenship / Visa</label>
+            <select id="citizenship-filter" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+              <option value="ALL">Any Status</option>
+              <option value="US Citizen">US Citizen</option>
+              <option value="Permanent Resident">Permanent Resident (Green Card)</option>
+              <option value="International">International / Non-Citizen Eligible</option>
+            </select>
+          </div>
+
+          <!-- Min GPA Filter -->
+          <div class="mb-5">
+            <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              <span>Your Current GPA</span>
+              <span id="gpa-val" class="text-sky-600 font-mono text-sm">3.0</span>
+            </div>
+            <input type="range" id="gpa-slider" min="2.0" max="4.0" step="0.1" value="3.0" class="w-full accent-sky-600 cursor-pointer">
+            <p class="text-[11px] text-slate-400 mt-1">Hides programs where required GPA is higher than yours.</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Results Grid -->
+      <section class="lg:col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-sm font-semibold text-slate-600">Showing <span id="match-count" class="text-slate-900 font-bold">0</span> opportunities</p>
+        </div>
+
+        <div id="cards-container" class="space-y-4">
+          <!-- Cards injected via JavaScript -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // Embedded Starter Dataset
+    const opportunities = [
+      {
+        id: 1,
+        title: "DoD SMART Scholarship-for-Service",
+        organization: "Department of Defense",
+        category: "Fellowship / Scholarship",
+        citizenship: ["US Citizen"],
+        minGpa: 3.0,
+        stipend: "$30,000 - $46,000 / year + Full Tuition",
+        deadlines: "August - December",
+        academicStanding: ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"],
+        tags: ["STEM", "Full Funding", "Post-Grad Employment"],
+        link: "https://www.smartscholarship.org/",
+        description: "Provides full tuition, annual stipends, and guaranteed civilian employment with the DoD upon graduation across 21 STEM disciplines."
+      },
+      {
+        id: 2,
+        title: "Science Undergraduate Laboratory Internships (SULI)",
+        organization: "U.S. Department of Energy (DOE)",
+        category: "National Lab Internship",
+        citizenship: ["US Citizen", "Permanent Resident"],
+        minGpa: 3.0,
+        stipend: "$650 / week + Housing & Travel",
+        deadlines: "Fall, Spring, & Summer cycles",
+        academicStanding: ["Sophomore", "Junior", "Senior", "Recent Grad"],
+        tags: ["National Labs", "Energy", "Computing", "Physics"],
+        link: "https://science.osti.gov/wdts/suli",
+        description: "Direct research appointments mentored by lab scientists across 17 national laboratories including Oak Ridge, Argonne, and Brookhaven."
+      },
+      {
+        id: 3,
+        title: "Barry Goldwater Scholarship",
+        organization: "Barry Goldwater Excellence in Education Foundation",
+        category: "Fellowship / Scholarship",
+        citizenship: ["US Citizen", "Permanent Resident"],
+        minGpa: 3.0,
+        stipend: "Up to $7,500 / year",
+        deadlines: "Campus nomination: Fall | Final: Last Friday in Jan",
+        academicStanding: ["Sophomore", "Junior"],
+        tags: ["Natural Sciences", "Mathematics", "Engineering"],
+        link: "https://goldwaterscholarship.gov/",
+        description: "The premier undergraduate award for students intending to pursue intensive research careers in mathematics, natural sciences, and engineering."
+      },
+      {
+        id: 4,
+        title: "NSF REU: Computational Data Science & Analytics",
+        organization: "National Science Foundation",
+        category: "Academic Research (REU)",
+        citizenship: ["US Citizen", "Permanent Resident"],
+        minGpa: 2.7,
+        stipend: "$6,000 stipend + Housing + Food allowance",
+        deadlines: "Opens: Dec | Closes: Mid-February",
+        academicStanding: ["Freshman", "Sophomore", "Junior"],
+        tags: ["Data Science", "Machine Learning", "Statistics"],
+        link: "https://www.nsf.gov/crssprgm/reu/",
+        description: "10-week summer research experience focused on distributed computing, predictive modeling, and applied mathematics."
+      },
+      {
+        id: 5,
+        title: "NASA L'SPACE Academy",
+        organization: "NASA / Arizona State University",
+        category: "Industry Internship",
+        citizenship: ["US Citizen"],
+        minGpa: 2.5,
+        stipend: "Unpaid / Virtual Training Certificate + Seed Grant Eligible",
+        deadlines: "3 sessions/year (Jan, May, Aug)",
+        academicStanding: ["Freshman", "Sophomore", "Junior", "Senior"],
+        tags: ["Aerospace", "Project Management", "Systems Engineering"],
+        link: "https://www.lspace.asu.edu/",
+        description: "A free 12-week interactive virtual training program designed to prepare STEM students for NASA and aerospace mission-concept work."
+      },
+      {
+        id: 6,
+        title: "DAAD RISE Germany (Research Internships in Science & Eng.)",
+        organization: "German Academic Exchange Service",
+        category: "Academic Research (REU)",
+        citizenship: ["US Citizen", "Permanent Resident", "International"],
+        minGpa: 3.0,
+        stipend: "~€934/month + Travel & Health Insurance",
+        deadlines: "Mid-October - November 30",
+        academicStanding: ["Sophomore", "Junior"],
+        tags: ["International", "Europe", "Research", "All STEM"],
+        link: "https://www.daad.de/rise/en/",
+        description: "Pairs North American undergraduate students with doctoral researchers at top German universities and research institutions. Working language is English."
+      }
+    ];
+
+    // DOM Elements
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+    const citizenshipFilter = document.getElementById('citizenship-filter');
+    const gpaSlider = document.getElementById('gpa-slider');
+    const gpaVal = document.getElementById('gpa-val');
+    const cardsContainer = document.getElementById('cards-container');
+    const matchCount = document.getElementById('match-count');
+    const resetBtn = document.getElementById('reset-filters');
+
+    function renderCards() {
+      const q = searchInput.value.toLowerCase().trim();
+      const cat = categoryFilter.value;
+      const citizen = citizenshipFilter.value;
+      const userGpa = parseFloat(gpaSlider.value);
+
+      const filtered = opportunities.filter(item => {
+        // Keyword Search
+        const matchesQuery = !q || 
+          item.title.toLowerCase().includes(q) || 
+          item.organization.toLowerCase().includes(q) || 
+          item.tags.some(t => t.toLowerCase().includes(q));
+
+        // Category Filter
+        const matchesCat = (cat === 'ALL' || item.category === cat);
+
+        // Citizenship Filter
+        const matchesCitizen = (citizen === 'ALL' || item.citizenship.includes(citizen));
+
+        // GPA Requirement (User GPA must meet or exceed program min GPA)
+        const matchesGpa = (userGpa >= item.minGpa);
+
+        return matchesQuery && matchesCat && matchesCitizen && matchesGpa;
+      });
+
+      matchCount.textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        cardsContainer.innerHTML = `
+          <div class="bg-white border border-slate-200 p-8 rounded-xl text-center">
+            <p class="text-slate-500 font-medium">No opportunities match your current criteria.</p>
+            <p class="text-xs text-slate-400 mt-1">Try relaxing your GPA slider or resetting your filters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      cardsContainer.innerHTML = filtered.map(item => `
+        <article class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
+            <div>
+              <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-sky-50 text-sky-700 border border-sky-100 mb-1">
+                ${item.category}
+              </span>
+              <h3 class="text-lg font-bold text-slate-900">${item.title}</h3>
+              <p class="text-sm font-medium text-slate-500">${item.organization}</p>
+            </div>
+            <a href="${item.link}" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-sky-600 text-white text-xs font-bold rounded-lg transition-colors shrink-0">
+              Apply / Details →
+            </a>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-4 leading-relaxed">${item.description}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 py-3 border-t border-b border-slate-100 text-xs text-slate-600 mb-4">
+            <div><strong class="text-slate-800">Min GPA:</strong> ${item.minGpa === 0 ? 'None' : item.minGpa.toFixed(1)}</div>
+            <div><strong class="text-slate-800">Deadlines:</strong> ${item.deadlines}</div>
+            <div><strong class="text-slate-800">Funding:</strong> ${item.stipend}</div>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 items-center">
+            ${item.tags.map(t => `<span class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-600 rounded">${t}</span>`).join('')}
+            <span class="text-[11px] text-slate-400 ml-auto">Citizenship: ${item.citizenship.join(', ')}</span>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    // Event Listeners
+    searchInput.addEventListener('input', renderCards);
+    categoryFilter.addEventListener('change', renderCards);
+    citizenshipFilter.addEventListener('change', renderCards);
+    gpaSlider.addEventListener('input', (e) => {
+      gpaVal.textContent = parseFloat(e.target.value).toFixed(1);
+      renderCards();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      categoryFilter.value = 'ALL';
+      citizenshipFilter.value = 'ALL';
+      gpaSlider.value = '3.0';
+      gpaVal.textContent = '3.0';
+      renderCards();
+    });
+
+    // Initial render
+    renderCards();
+  </script>
+</body>
+</html>
